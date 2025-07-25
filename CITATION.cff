@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Greensmith"
+  given-names: "Rosemary Victoria"
+  orcid: "https://orcid.org/0009-0009-2968-2678"
+title: "lichen_mapping"
+version: 1.0.0
+doi: 10.5281/zenodo.1234
+date-released: 2025-07-25
+url: "https://github.com/RGreensmith/lichen_mapping"
