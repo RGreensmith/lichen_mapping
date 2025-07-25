@@ -1,0 +1,133 @@
+---
+title: "Lichen Mapping"
+author: "Rosemary Victoria Greensmith"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+library(dplyr)
+library(sf)
+library(rnaturalearth)
+library(httr)      # for getting data using API's
+library(jsonlite)  # for getting WoRMS data
+
+```
+
+## Lichen Occurences
+
+This code uses the NBN Atlas API key to get occurrence data for nitrogen sensitive and nitrogen tolerant species of Lichen and display the raw data on maps.
+
+```{r occurrenceMaps, echo=TRUE}
+################################################################################
+#                 Maps of records from the NBN Atlas
+################################################################################
+
+# Download the base map of UK and surrounding countries
+uk_map <- ne_countries(
+  scale = "medium",
+  returnclass = "sf"
+) %>%
+  filter(admin %in% c("United Kingdom", "Ireland",
+                      "Jersey","France","Netherlands","Germany",
+                      "Denmark","Belgium","Norway","Finland","Sweden"))
+
+# String of species names to loop through
+# "Pseudevernia furfuracea" - need to add to nSensitive
+nSensitive = c("Evernia prunastri","Usnea sp.",
+               "Bryoria sp.","Sphaerophorus globosus","Hypogymnia sp.",
+               "Parmelia sp.","Graphis sp.","Ochrolechia androgyna")
+
+nTolerant = c("Xanthoria parietina","Xanthoria polycarpa","Xanthoria ucrainica",
+              "Punctelia subrudecta","Physcia adscendens","Physcia tenella",
+              "Arthonia radiata","Lecidella elaeochroma","Amandinea punctata",
+              "Candelariella reflexa")
+
+# Set graphical parameters for the maps
+op = par(mfrow=c(2,4), font.lab = 2,
+         mar=c(2,2.5,1,0.1)+0.1,
+         oma=c(0.01,0.01,2,0.01),xpd=FALSE)
+
+###### Get NBN Atlas data and map the records ######
+for (z in 1:2) {
+  if (z == 1){
+    indicatorSpp = nSensitive
+  } else {
+    indicatorSpp = nTolerant
+  }
+  for (a in 1:length(indicatorSpp)) {
+  
+  # Split species name into genus and species to parse the API for NBN Atlas
+  binomClassNm = indicatorSpp[a]
+  binomClassNmSplit = strsplit(binomClassNm,"[ ]")
+  genus = binomClassNmSplit[[1]][1]
+  species = binomClassNmSplit[[1]][2]
+  
+  # NBN Atlas record filter:
+  #     - No unconfirmed, unconfirmed (not reviewed) or unconfirmed (plausible)
+  #     - No absences
+  
+  if (species != "sp.") {
+    api=paste("https://records-ws.nbnatlas.org/occurrences/search?",
+            "q=*:*&fq=genus:",
+            genus,
+            "&fq=-(identification_verification_status%3A%22Unconfirmed%22%20OR",
+            "%20identification_verification_status%3A%22Unconfirmed%20-%20",
+            "not%20reviewed%22%20OR%20identification_verification_status%3A%22",
+            "Unconfirmed%20-%20plausible%22)&fq=-occurrence_status%3A%22absent",
+            "%22&fq=taxon_name%3A%22",
+            genus,
+            "%20",
+            species,
+            "%22&pageSize=100000",sep = "")
+  } else {
+    api=paste("https://records-ws.nbnatlas.org/occurrences/search?",
+            "q=*:*&fq=genus:",
+            genus,
+            "&fq=-(identification_verification_status%3A%22Unconfirmed%22%20OR",
+            "%20identification_verification_status%3A%22Unconfirmed%20-%20",
+            "not%20reviewed%22%20OR%20identification_verification_status%3A%22",
+            "Unconfirmed%20-%20plausible%22)&fq=-occurrence_status%3A%22absent",
+            "%22&fq=taxon_name%3A%22",
+            genus,
+            "%22&pageSize=100000",sep = "")
+  }
+  
+  taxonInfo = GET(api)
+  taxonInfoContent = httr::content(taxonInfo, as = 'text')
+  taxonInfoContentJSON = jsonlite::fromJSON(taxonInfoContent)
+  df=taxonInfoContentJSON$occurrences
+  
+
+  ############### Map the records from NBN Atlas ##################
+  
+  # Projection/CRS of base map, NBN Atlas coordinates:
+  #     - WGS 84
+  plot(st_geometry(uk_map),border="#FFFFFF",axes=TRUE,
+       xlim=c(-15,5),ylim=c(48.5,61.5),
+       col="#E4E6F6",cex.axis=0.8)
+  if(z==1) {
+    pointsCol = "#00a6fb"
+    mainTitle = "Nitrogen-sensitive Lichen"
+  } else {
+    pointsCol = "#F79824"
+    mainTitle = "Nitrogen-tolerant Lichen"
+  }
+  points(as.numeric(df$decimalLongitude),
+         as.numeric(df$decimalLatitude),
+         pch = 19,
+         cex = 0.6,
+         col=pointsCol)
+  
+  title(main = binomClassNm,cex.main = 0.9,line = -1)
+  
+  mtext(mainTitle,
+        side = 3, line = -0.14, outer = TRUE,col = c("#191d2d"),
+        font = 2,cex = 1.05)
+  rm(taxonInfo,taxonInfoContent,taxonInfoContentJSON,df)
+  }
+}
+
+```
