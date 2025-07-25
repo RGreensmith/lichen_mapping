@@ -14,6 +14,11 @@ library(rnaturalearth)
 library(httr)      # for getting data using API's
 library(jsonlite)  # for getting WoRMS data
 
+# kernel density map
+library(sp) # for setting up the layers to map
+library(adehabitatHR)
+library(raster)
+
 ```
 
 ## Lichen Occurences
@@ -39,9 +44,9 @@ uk_map <- ne_countries(
 nSensitive = c("Evernia prunastri","Usnea sp.",
                "Bryoria sp.","Sphaerophorus globosus","Hypogymnia sp.",
                "Parmelia sp.","Graphis sp.","Ochrolechia androgyna")
-
+# "Punctelia subrudecta" - nTolerant
 nTolerant = c("Xanthoria parietina","Xanthoria polycarpa","Xanthoria ucrainica",
-              "Punctelia subrudecta","Physcia adscendens","Physcia tenella",
+              "Physcia adscendens","Physcia tenella",
               "Arthonia radiata","Lecidella elaeochroma","Amandinea punctata",
               "Candelariella reflexa")
 
@@ -81,7 +86,7 @@ for (z in 1:2) {
             genus,
             "%20",
             species,
-            "%22&pageSize=100000",sep = "")
+            "%22&pageSize=1000",sep = "")
   } else {
     api=paste("https://records-ws.nbnatlas.org/occurrences/search?",
             "q=*:*&fq=genus:",
@@ -126,8 +131,35 @@ for (z in 1:2) {
   mtext(mainTitle,
         side = 3, line = -0.14, outer = TRUE,col = c("#191d2d"),
         font = 2,cex = 1.05)
+  
+  ################ kernel density map #################################
+  
+  # Create colour ramp for kernel density estimation of observations
+  # using The Rock Pool Project brand colours
+  fun_colour_range <- colorRampPalette(c("#FFFFFF",pointsCol))   
+  my_colours <- fun_colour_range(1000)  
+  
+  # Setting up the layers to map
+  sdf = data.frame(as.numeric(df$decimalLongitude),
+                  as.numeric(df$decimalLatitude))
+        
+  s = SpatialPoints(na.omit(sdf))
+  kde.output <- kernelUD(s,h="href", grid = 1000)
+  # converts to raster
+  kde <- raster(kde.output)
+  # sets projection to British National Grid
+  projection(kde) <- CRS("+init=EPSG:27700")
+  
+  masked_kde <- mask(kde, uk_map)
+  
+  plot(masked_kde,col=my_colours,axes=TRUE,
+       xlim=c(-11,3),ylim=c(48.5,61.5))
+  plot(st_geometry(uk_map),add = TRUE,border="#191d2d")
+  title(main = binomClassNm,cex.main = 0.9,line = -1)
+
   rm(taxonInfo,taxonInfoContent,taxonInfoContentJSON,df)
   }
+  
 }
 
 ```
