@@ -19,6 +19,12 @@ library(sp) # for setting up the layers to map
 library(adehabitatHR)
 library(raster)
 
+library(showtext)
+# library(ggtext)
+# Fonts for plots
+font_add_google("Montserrat", "mont")
+font_add_google("Chivo", "chivo")
+showtext_auto()
 ```
 
 ## Lichen Occurences
@@ -97,7 +103,7 @@ for (z in 1:2) {
             "Unconfirmed%20-%20plausible%22)&fq=-occurrence_status%3A%22absent",
             "%22&fq=taxon_name%3A%22",
             genus,
-            "%22&pageSize=100000",sep = "")
+            "%22&pageSize=1000",sep = "")
   }
   
   taxonInfo = GET(api)
@@ -110,14 +116,14 @@ for (z in 1:2) {
   
   # Projection/CRS of base map, NBN Atlas coordinates:
   #     - WGS 84
-  plot(st_geometry(uk_map),border="#FFFFFF",axes=TRUE,
+  plot(st_geometry(uk_map),border="#f9fdf9",axes=TRUE,
        xlim=c(-15,5),ylim=c(48.5,61.5),
-       col="#E4E6F6",cex.axis=0.8)
+       col="#d8dedd",cex.axis=0.8)
   if(z==1) {
-    pointsCol = "#00a6fb"
+    pointsCol = "#78C6C0"
     mainTitle = "Nitrogen-sensitive Lichen"
   } else {
-    pointsCol = "#F79824"
+    pointsCol = "#c6787e"
     mainTitle = "Nitrogen-tolerant Lichen"
   }
   points(as.numeric(df$decimalLongitude),
@@ -129,14 +135,14 @@ for (z in 1:2) {
   title(main = binomClassNm,cex.main = 0.9,line = -1)
   
   mtext(mainTitle,
-        side = 3, line = -0.14, outer = TRUE,col = c("#191d2d"),
+        side = 3, line = -0.14, outer = TRUE,col = c("#131713"),
         font = 2,cex = 1.05)
   
   ################ kernel density map #################################
   
   # Create colour ramp for kernel density estimation of observations
   # using The Rock Pool Project brand colours
-  fun_colour_range <- colorRampPalette(c("#FFFFFF",pointsCol))   
+  fun_colour_range <- colorRampPalette(c("#d8dedd",pointsCol))   
   my_colours <- fun_colour_range(1000)  
   
   # Setting up the layers to map
@@ -153,8 +159,8 @@ for (z in 1:2) {
   masked_kde <- mask(kde, uk_map)
   
   plot(masked_kde,col=my_colours,axes=TRUE,
-       xlim=c(-11,3),ylim=c(48.5,61.5))
-  plot(st_geometry(uk_map),add = TRUE,border="#191d2d")
+       xlim=c(-15,5),ylim=c(48.5,61.5))
+  plot(st_geometry(uk_map),add = TRUE,border="#f9fdf9")
   title(main = binomClassNm,cex.main = 0.9,line = -1)
 
   rm(taxonInfo,taxonInfoContent,taxonInfoContentJSON,df)
