@@ -11,8 +11,8 @@ knitr::opts_chunk$set(echo = FALSE)
 library(dplyr)
 library(sf)
 library(rnaturalearth)
-library(httr)      # for getting data using API's
-library(jsonlite)  # for getting WoRMS data
+# library(httr)      # for getting data using API's
+# library(jsonlite)  # for getting NBN Atlas data
 
 # kernel density map
 library(sp) # for setting up the layers to map
@@ -29,7 +29,24 @@ showtext_auto()
 
 ## Lichen Occurences
 
-This code uses the NBN Atlas API key to get occurrence data for nitrogen sensitive and nitrogen tolerant species of Lichen and display the raw data on maps.
+This code uses the NBN Atlas API key to get occurrence data for nitrogen sensitive and nitrogen tolerant species of Lichen.
+
+```{r getNBNAtlasData}
+for (z in 1:2) {
+  if (z == 1){
+    indicatorSpp = nSensitive
+  } else {
+    indicatorSpp = nTolerant
+  }
+  for (a in 1:length(indicatorSpp)) {
+    getNBNData(indicatorSpp[a])
+  }
+}
+```
+
+## Lichen Occurences
+
+This code displays the raw NBN Atlas data on maps.
 
 ```{r occurrenceMaps, echo=TRUE}
 ################################################################################
