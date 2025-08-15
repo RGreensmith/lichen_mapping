@@ -7,12 +7,15 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
+# library(devtools)
+# devtools::install_github("RGreensmith/NBNAtlasMappingPack")
+# library(NBNAtlasMappingPack)
 
 library(dplyr)
 library(sf)
 library(rnaturalearth)
-# library(httr)      # for getting data using API's
-# library(jsonlite)  # for getting NBN Atlas data
+library(httr)      # for getting data using API's
+library(jsonlite)  # for getting NBN Atlas data
 
 # kernel density map
 library(sp) # for setting up the layers to map
@@ -27,23 +30,109 @@ font_add_google("Chivo", "chivo")
 showtext_auto()
 ```
 
-## Lichen Occurences
+# Functions
 
-This code uses the NBN Atlas API key to get occurrence data for nitrogen sensitive and nitrogen tolerant species of Lichen.
+## NBN Atlas data function
+This code defines a function called getNBNData, for using the NBN Atlas API key to get the lichen occurrence records.
 
-```{r getNBNAtlasData}
-for (z in 1:2) {
-  if (z == 1){
-    indicatorSpp = nSensitive
+```{r getNBNData_function,echo=TRUE}
+
+###### Get NBN Atlas data ######
+# NBN Atlas record filter:
+#     - No unconfirmed, unconfirmed (not reviewed) or unconfirmed (plausible)
+#     - No absences
+
+getNBNData = function(latinName,numRecords){
+  # Split species name into genus and species to parse the API for NBN Atlas
+  binomNmSplit = strsplit(latinName,"[ ]")
+  genus = binomNmSplit[[1]][1]
+  species = binomNmSplit[[1]][2]
+
+  if (species != "sp.") {
+    api=paste("https://records-ws.nbnatlas.org/occurrences/search?",
+              "q=*:*&fq=genus:",
+              genus,
+              "&fq=-(identification_verification_status%3A%22Unconfirmed%22%20OR",
+              "%20identification_verification_status%3A%22Unconfirmed%20-%20",
+              "not%20reviewed%22%20OR%20identification_verification_status%3A%22",
+              "Unconfirmed%20-%20plausible%22)&fq=-occurrence_status%3A%22absent",
+              "%22&fq=taxon_name%3A%22",
+              genus,
+              "%20",
+              species,
+              "%22&pageSize=",numRecords,sep = "")
   } else {
-    indicatorSpp = nTolerant
+    api=paste("https://records-ws.nbnatlas.org/occurrences/search?",
+              "q=*:*&fq=genus:",
+              genus,
+              "&fq=-(identification_verification_status%3A%22Unconfirmed%22%20OR",
+              "%20identification_verification_status%3A%22Unconfirmed%20-%20",
+              "not%20reviewed%22%20OR%20identification_verification_status%3A%22",
+              "Unconfirmed%20-%20plausible%22)&fq=-occurrence_status%3A%22absent",
+              "%22&fq=taxon_name%3A%22",
+              genus,
+              "%22&pageSize=",numRecords,sep = "")
   }
-  for (a in 1:length(indicatorSpp)) {
-    getNBNData(indicatorSpp[a])
-  }
+  taxonInfo = GET(api)
+  taxonInfoContent = httr::content(taxonInfo, as = 'text')
+  taxonInfoContentJSON = jsonlite::fromJSON(taxonInfoContent)
+  df=taxonInfoContentJSON$occurrences
+  return(df)
 }
 ```
 
+## NBN mapping function
+This function creates a map of occurrence records and has the option to plot a density map as well.
+
+```{r maps, echo=TRUE}
+occurenceMap = function(basemap,sppDF,sppName,colGroup = "a",kdePlot = FALSE) {
+  # Projection/CRS of base map, NBN Atlas coordinates:
+  #     - WGS 84
+  plot(st_geometry(basemap),border="#f9fdf9",axes=TRUE,
+       xlim=c(-15,5),ylim=c(48.5,61.5),
+       col="#d8dedd",cex.axis=0.8)
+  
+  if(colGroup=="a") {
+    pointsCol = "#78C6C0"
+  } else {
+    pointsCol = "#c6787e"
+  }
+  points(as.numeric(sppDF$decimalLongitude),
+         as.numeric(sppDF$decimalLatitude),
+         pch = 19,
+         cex = 0.6,
+         col=pointsCol)
+  
+  title(main = sppName,cex.main = 0.9,line = -1)
+ 
+  
+  ################ kernel density map #################################
+  if (isTRUE(kdePlot)) {
+      # Create colour ramp for kernel density estimation of observations
+      # using my website colours
+    fun_colour_range <- colorRampPalette(c("#d8dedd",pointsCol))   
+    my_colours <- fun_colour_range(1000)  
+    
+    # Setting up the layers to map
+    sdf = data.frame(as.numeric(df$decimalLongitude),
+                    as.numeric(df$decimalLatitude))
+          
+    s = SpatialPoints(na.omit(sdf))
+    kde.output <- kernelUD(s,h="href", grid = 1000)
+    # converts to raster
+    kde <- raster(kde.output)
+    # sets projection to British National Grid
+    projection(kde) <- CRS("+init=EPSG:27700")
+    
+    masked_kde <- mask(kde, uk_map)
+    
+    plot(masked_kde,col=my_colours,axes=TRUE,
+         xlim=c(-15,5),ylim=c(48.5,61.5))
+    plot(st_geometry(uk_map),add = TRUE,border="#f9fdf9")
+    title(main = indicatorSpp[a],cex.main = 0.9,line = -1)
+  }
+}
+```
 ## Lichen Occurences
 
 This code displays the raw NBN Atlas data on maps.
@@ -87,102 +176,25 @@ for (z in 1:2) {
   }
   for (a in 1:length(indicatorSpp)) {
   
-  # Split species name into genus and species to parse the API for NBN Atlas
-  binomClassNm = indicatorSpp[a]
-  binomClassNmSplit = strsplit(binomClassNm,"[ ]")
-  genus = binomClassNmSplit[[1]][1]
-  species = binomClassNmSplit[[1]][2]
+    df = getNBNData(indicatorSpp[a],100)
+    
+    if(z==1) {
+      colGroup = "a"
+      mainTitle = "Nitrogen-sensitive Lichen"
+    } else {
+      colGroup = "b"
+      mainTitle = "Nitrogen-tolerant Lichen"
+    }
   
-  # NBN Atlas record filter:
-  #     - No unconfirmed, unconfirmed (not reviewed) or unconfirmed (plausible)
-  #     - No absences
-  
-  if (species != "sp.") {
-    api=paste("https://records-ws.nbnatlas.org/occurrences/search?",
-            "q=*:*&fq=genus:",
-            genus,
-            "&fq=-(identification_verification_status%3A%22Unconfirmed%22%20OR",
-            "%20identification_verification_status%3A%22Unconfirmed%20-%20",
-            "not%20reviewed%22%20OR%20identification_verification_status%3A%22",
-            "Unconfirmed%20-%20plausible%22)&fq=-occurrence_status%3A%22absent",
-            "%22&fq=taxon_name%3A%22",
-            genus,
-            "%20",
-            species,
-            "%22&pageSize=1000",sep = "")
-  } else {
-    api=paste("https://records-ws.nbnatlas.org/occurrences/search?",
-            "q=*:*&fq=genus:",
-            genus,
-            "&fq=-(identification_verification_status%3A%22Unconfirmed%22%20OR",
-            "%20identification_verification_status%3A%22Unconfirmed%20-%20",
-            "not%20reviewed%22%20OR%20identification_verification_status%3A%22",
-            "Unconfirmed%20-%20plausible%22)&fq=-occurrence_status%3A%22absent",
-            "%22&fq=taxon_name%3A%22",
-            genus,
-            "%22&pageSize=1000",sep = "")
-  }
-  
-  taxonInfo = GET(api)
-  taxonInfoContent = httr::content(taxonInfo, as = 'text')
-  taxonInfoContentJSON = jsonlite::fromJSON(taxonInfoContent)
-  df=taxonInfoContentJSON$occurrences
-  
-
-  ############### Map the records from NBN Atlas ##################
-  
-  # Projection/CRS of base map, NBN Atlas coordinates:
-  #     - WGS 84
-  plot(st_geometry(uk_map),border="#f9fdf9",axes=TRUE,
-       xlim=c(-15,5),ylim=c(48.5,61.5),
-       col="#d8dedd",cex.axis=0.8)
-  if(z==1) {
-    pointsCol = "#78C6C0"
-    mainTitle = "Nitrogen-sensitive Lichen"
-  } else {
-    pointsCol = "#c6787e"
-    mainTitle = "Nitrogen-tolerant Lichen"
-  }
-  points(as.numeric(df$decimalLongitude),
-         as.numeric(df$decimalLatitude),
-         pch = 19,
-         cex = 0.6,
-         col=pointsCol)
-  
-  title(main = binomClassNm,cex.main = 0.9,line = -1)
-  
-  mtext(mainTitle,
-        side = 3, line = -0.14, outer = TRUE,col = c("#131713"),
-        font = 2,cex = 1.05)
-  
-  ################ kernel density map #################################
-  
-  # Create colour ramp for kernel density estimation of observations
-  # using The Rock Pool Project brand colours
-  fun_colour_range <- colorRampPalette(c("#d8dedd",pointsCol))   
-  my_colours <- fun_colour_range(1000)  
-  
-  # Setting up the layers to map
-  sdf = data.frame(as.numeric(df$decimalLongitude),
-                  as.numeric(df$decimalLatitude))
-        
-  s = SpatialPoints(na.omit(sdf))
-  kde.output <- kernelUD(s,h="href", grid = 1000)
-  # converts to raster
-  kde <- raster(kde.output)
-  # sets projection to British National Grid
-  projection(kde) <- CRS("+init=EPSG:27700")
-  
-  masked_kde <- mask(kde, uk_map)
-  
-  plot(masked_kde,col=my_colours,axes=TRUE,
-       xlim=c(-15,5),ylim=c(48.5,61.5))
-  plot(st_geometry(uk_map),add = TRUE,border="#f9fdf9")
-  title(main = binomClassNm,cex.main = 0.9,line = -1)
-
-  rm(taxonInfo,taxonInfoContent,taxonInfoContentJSON,df)
+    occurenceMap(uk_map,df,indicatorSpp[a],colGroup,kdePlot = TRUE)
+    
+     mtext(mainTitle,
+          side = 3, line = -0.14, outer = TRUE,col = c("#131713"),
+          font = 2,cex = 1.05)
+    rm(df)
   }
   
 }
 
 ```
+
