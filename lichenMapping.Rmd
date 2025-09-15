@@ -85,7 +85,7 @@ getNBNData = function(latinName,numRecords){
 This function creates a map of occurrence records and has the option to plot a density map as well.
 
 ```{r maps, echo=TRUE}
-occurenceMap = function(basemap,sppDF,sppName,colGroup = "a",kdePlot = FALSE) {
+occurrenceMap = function(basemap,sppDF,sppName,colGroup = "a",kdePlot = FALSE) {
   # Projection/CRS of base map, NBN Atlas coordinates:
   #     - WGS 84
   plot(st_geometry(basemap),border="#f9fdf9",axes=TRUE,
@@ -133,24 +133,11 @@ occurenceMap = function(basemap,sppDF,sppName,colGroup = "a",kdePlot = FALSE) {
   }
 }
 ```
-## Lichen Occurences
 
-This code displays the raw NBN Atlas data on maps.
+## Lichen Occurrences
+### Lichen species names
 
-```{r occurrenceMaps, echo=TRUE}
-################################################################################
-#                 Maps of records from the NBN Atlas
-################################################################################
-
-# Download the base map of UK and surrounding countries
-uk_map <- ne_countries(
-  scale = "medium",
-  returnclass = "sf"
-) %>%
-  filter(admin %in% c("United Kingdom", "Ireland",
-                      "Jersey","France","Netherlands","Germany",
-                      "Denmark","Belgium","Norway","Finland","Sweden"))
-
+```{r a, echo=TRUE}
 # String of species names to loop through
 # "Pseudevernia furfuracea" - need to add to nSensitive
 nSensitive = c("Evernia prunastri","Usnea sp.",
@@ -161,6 +148,30 @@ nTolerant = c("Xanthoria parietina","Xanthoria polycarpa","Xanthoria ucrainica",
               "Physcia adscendens","Physcia tenella",
               "Arthonia radiata","Lecidella elaeochroma","Amandinea punctata",
               "Candelariella reflexa")
+```
+
+### Base map
+
+```{r}
+# Download the base map of UK and surrounding countries
+uk_map <- ne_countries(
+  scale = "medium",
+  returnclass = "sf"
+) %>%
+  filter(admin %in% c("United Kingdom", "Ireland",
+                      "Jersey","France","Netherlands","Germany",
+                      "Denmark","Belgium","Norway","Finland","Sweden"))
+
+```
+
+
+This code displays the raw NBN Atlas data on maps.
+
+```{r occurrenceMaps, echo=TRUE}
+################################################################################
+#                 Maps of records from the NBN Atlas
+################################################################################
+
 
 # Set graphical parameters for the maps
 op = par(mfrow=c(2,4), font.lab = 2,
@@ -175,7 +186,6 @@ for (z in 1:2) {
     indicatorSpp = nTolerant
   }
   for (a in 1:length(indicatorSpp)) {
-  
     df = getNBNData(indicatorSpp[a],100)
     
     if(z==1) {
@@ -186,7 +196,7 @@ for (z in 1:2) {
       mainTitle = "Nitrogen-tolerant Lichen"
     }
   
-    occurenceMap(uk_map,df,indicatorSpp[a],colGroup,kdePlot = TRUE)
+    occurrenceMap(uk_map,df,indicatorSpp[a],colGroup,kdePlot = TRUE)
     
      mtext(mainTitle,
           side = 3, line = -0.14, outer = TRUE,col = c("#131713"),
@@ -195,6 +205,125 @@ for (z in 1:2) {
   }
   
 }
+
+```
+
+## Combined data
+
+```{r combinedData, echo=TRUE}
+
+for (z in 1:2) {
+  if (z == 1){
+    indicatorSpp = nSensitive
+    indSppType = "nSensitive"
+  } else {
+    indicatorSpp = nTolerant
+    indSppType = "nTolerant"
+  }
+  
+  numRecords = 1e4
+
+  for (a in 1:length(indicatorSpp)) {
+    if (z == 1 && a == 1) {
+      df = getNBNData(indicatorSpp[a],numRecords)
+      df2 = data.frame(df$scientificName,
+                       df$decimalLongitude,
+                       df$decimalLatitude,
+                       rep(indSppType, times = length(df[,1]))
+                     )
+    } else {
+      df = getNBNData(indicatorSpp[a],numRecords)
+      df2 = rbind(df2,data.frame(
+        df$scientificName,
+        df$decimalLongitude,
+        df$decimalLatitude,
+        rep(indSppType, times = length(df[,1]))
+                     )
+                  )
+    }
+  }
+  df2 = na.omit(df2)
+}
+colnames(df2) = c("scientificName", "decimalLongitude", "decimalLatitude", "indicatorType")
+
+head(df2)
+plot(df2$decimalLongitude,df2$decimalLatitude)
+
+```
+
+## Combined Map
+
+```{r combinedMap, echo=TRUE}
+
+combinedMap = function(basemap,sppDF,indicatorSensitive = TRUE) {
+  plot(st_geometry(basemap),border="#f9fdf9",axes=TRUE,
+     xlim=c(-15,5),ylim=c(48.5,61.5),
+     col="#d8dedd",cex.axis=0.8)
+  
+  if(isTRUE(indicatorSensitive)) {
+    pointsCol = "#78C6C0"
+  } else {
+    pointsCol = "#c6787e"
+  }
+  
+  points(as.numeric(sppDF$decimalLongitude),
+         as.numeric(sppDF$decimalLatitude),
+         pch = 19,
+         cex = 0.6,
+         col=pointsCol)
+  
+  if (isTRUE(indicatorSensitive)) {
+    title(main = "nSensitive",cex.main = 0.9,line = -1)
+  } else {
+    title(main = "nTolerant",cex.main = 0.9,line = -1)
+  }
+  
+  # Create colour ramp for kernel density estimation of observations
+      # using my website colours
+    fun_colour_range <- colorRampPalette(c("#d8dedd",pointsCol))   
+    my_colours <- fun_colour_range(1000)  
+    
+    # Setting up the layers to map
+    sdf = data.frame(as.numeric(sppDF$decimalLongitude),
+                    as.numeric(sppDF$decimalLatitude))
+          
+    s = SpatialPoints(na.omit(sdf))
+    kde.output <- kernelUD(s,h="href", grid = 1000)
+    # converts to raster
+    kde <- raster(kde.output)
+    # sets projection to British National Grid
+    projection(kde) <- CRS("+init=EPSG:27700")
+    
+    masked_kde <- mask(kde, uk_map)
+    
+    plot(masked_kde,col=my_colours,axes=TRUE,
+         xlim=c(-15,5),ylim=c(48.5,61.5))
+    plot(st_geometry(uk_map),add = TRUE,border="#f9fdf9")
+    
+    if (isTRUE(indicatorSensitive)) {
+      title(main = "nSensitive",cex.main = 0.9,line = -1)
+    } else {
+      title(main = "nTolerant",cex.main = 0.9,line = -1)
+    }
+}
+
+# Plot the maps
+
+op = par(mfrow=c(2,2), font.lab = 2,
+         mar=c(2,2.5,1,0.1)+0.1,
+         oma=c(0.01,0.01,2,0.01),xpd=FALSE)
+
+combinedMap(uk_map,
+            sppDF = subset(df2,
+                           indicatorType == "nSensitive",
+                           select = c("decimalLongitude","decimalLatitude"))
+)
+combinedMap(uk_map,
+            sppDF = subset(df2,
+                           indicatorType == "nTolerant",
+                           select = c("decimalLongitude","decimalLatitude")),
+            indicatorSensitive = FALSE
+)
 
 ```
 
