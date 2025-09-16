@@ -253,12 +253,12 @@ plot(df2$decimalLongitude,df2$decimalLatitude)
 
 ## Combined Map
 
-```{r combinedMap, echo=TRUE}
+```{r combinedMap, echo=FALSE}
 
 combinedMap = function(basemap,sppDF,indicatorSensitive = TRUE) {
-  plot(st_geometry(basemap),border="#f9fdf9",axes=TRUE,
-     xlim=c(-15,5),ylim=c(48.5,61.5),
-     col="#d8dedd",cex.axis=0.8)
+  # plot(st_geometry(basemap),border="#f9fdf9",axes=TRUE,
+  #    xlim=c(-15,5),ylim=c(48.5,61.5),
+  #    col="#d8dedd",cex.axis=0.8)
   
   if(isTRUE(indicatorSensitive)) {
     pointsCol = "#78C6C0"
@@ -266,18 +266,18 @@ combinedMap = function(basemap,sppDF,indicatorSensitive = TRUE) {
     pointsCol = "#c6787e"
   }
   
-  points(as.numeric(sppDF$decimalLongitude),
-         as.numeric(sppDF$decimalLatitude),
-         pch = 19,
-         cex = 0.6,
-         col=pointsCol)
-  
-  if (isTRUE(indicatorSensitive)) {
-    title(main = "nSensitive",cex.main = 0.9,line = -1)
-  } else {
-    title(main = "nTolerant",cex.main = 0.9,line = -1)
-  }
-  
+  # points(as.numeric(sppDF$decimalLongitude),
+  #        as.numeric(sppDF$decimalLatitude),
+  #        pch = 19,
+  #        cex = 0.6,
+  #        col=pointsCol)
+  # 
+  # if (isTRUE(indicatorSensitive)) {
+  #   title(main = "nSensitive",cex.main = 0.9,line = -1)
+  # } else {
+  #   title(main = "nTolerant",cex.main = 0.9,line = -1)
+  # }
+  # 
   # Create colour ramp for kernel density estimation of observations
       # using my website colours
     fun_colour_range <- colorRampPalette(c("#d8dedd",pointsCol))   
@@ -309,9 +309,9 @@ combinedMap = function(basemap,sppDF,indicatorSensitive = TRUE) {
 
 # Plot the maps
 
-op = par(mfrow=c(2,2), font.lab = 2,
-         mar=c(2,2.5,1,0.1)+0.1,
-         oma=c(0.01,0.01,2,0.01),xpd=FALSE)
+# op = par(mfrow=c(1,2), font.lab = 2,
+#          mar=c(2,2.5,1,0.1)+0.1,
+#          oma=c(0.01,0.01,2,0.01),xpd=FALSE)
 
 combinedMap(uk_map,
             sppDF = subset(df2,
