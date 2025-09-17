@@ -7,20 +7,24 @@ Rosemary Victoria Greensmith
 
 ### Lichen species names
 
-``` r
-# String of species names to loop through
-# "Pseudevernia furfuracea" - need to add to nSensitive
-nSensitive = c("Evernia prunastri","Usnea sp.",
-               "Bryoria sp.","Sphaerophorus globosus","Hypogymnia sp.",
-               "Parmelia sp.","Graphis sp.","Ochrolechia androgyna")
-# "Punctelia subrudecta" - nTolerant
-nTolerant = c("Xanthoria parietina","Xanthoria polycarpa","Xanthoria ucrainica",
-              "Physcia adscendens","Physcia tenella",
-              "Arthonia radiata","Lecidella elaeochroma","Amandinea punctata",
-              "Candelariella reflexa")
-```
+    ## Warning in cbind(nSensitive, nTolerant): number of rows of result is not a
+    ## multiple of vector length (arg 1)
 
-### Base map
+| nSensitive             | nTolerant             |
+|:-----------------------|:----------------------|
+| Evernia prunastri      | Xanthoria parietina   |
+| Usnea sp.              | Xanthoria polycarpa   |
+| Bryoria sp.            | Xanthoria ucrainica   |
+| Sphaerophorus globosus | Physcia adscendens    |
+| Hypogymnia sp.         | Physcia tenella       |
+| Parmelia sp.           | Arthonia radiata      |
+| Graphis sp.            | Lecidella elaeochroma |
+| Ochrolechia androgyna  | Amandinea punctata    |
+| \-                     | Candelariella reflexa |
+
+Nitrogen Indicator Species
+
+<!-- ### Base map -->
 
 This code displays the raw NBN Atlas data on maps.
 
@@ -66,57 +70,15 @@ for (z in 1:2) {
 
 ![](lichenMapping_files/figure-gfm/occurrenceMaps-1.png)<!-- -->![](lichenMapping_files/figure-gfm/occurrenceMaps-2.png)<!-- -->![](lichenMapping_files/figure-gfm/occurrenceMaps-3.png)<!-- -->![](lichenMapping_files/figure-gfm/occurrenceMaps-4.png)<!-- -->![](lichenMapping_files/figure-gfm/occurrenceMaps-5.png)<!-- -->
 
-## Combined data
-
-``` r
-for (z in 1:2) {
-  if (z == 1){
-    indicatorSpp = nSensitive
-    indSppType = "nSensitive"
-  } else {
-    indicatorSpp = nTolerant
-    indSppType = "nTolerant"
-  }
-  
-  numRecords = 1e4
-
-  for (a in 1:length(indicatorSpp)) {
-    if (z == 1 && a == 1) {
-      df = getNBNData(indicatorSpp[a],numRecords)
-      df2 = data.frame(df$scientificName,
-                       df$decimalLongitude,
-                       df$decimalLatitude,
-                       rep(indSppType, times = length(df[,1]))
-                     )
-    } else {
-      df = getNBNData(indicatorSpp[a],numRecords)
-      df2 = rbind(df2,data.frame(
-        df$scientificName,
-        df$decimalLongitude,
-        df$decimalLatitude,
-        rep(indSppType, times = length(df[,1]))
-                     )
-                  )
-    }
-  }
-  df2 = na.omit(df2)
-}
-colnames(df2) = c("scientificName", "decimalLongitude", "decimalLatitude", "indicatorType")
-
-head(df2)
-```
+## Combined Species occurrences
 
     ##      scientificName decimalLongitude decimalLatitude indicatorType
-    ## 1 Evernia prunastri        -1.725657        51.95512    nSensitive
-    ## 2 Evernia prunastri        -3.671692        55.68707    nSensitive
-    ## 3 Evernia prunastri        -6.053338        54.87708    nSensitive
-    ## 4 Evernia prunastri        -3.112672        55.88661    nSensitive
-    ## 5 Evernia prunastri        -0.207813        51.03806    nSensitive
-    ## 6 Evernia prunastri        -4.137410        50.48092    nSensitive
-
-``` r
-plot(df2$decimalLongitude,df2$decimalLatitude)
-```
+    ## 1 Evernia prunastri        -3.217716        52.02736    nSensitive
+    ## 2 Evernia prunastri        -3.309574        51.82857    nSensitive
+    ## 3 Evernia prunastri         0.450069        51.13809    nSensitive
+    ## 4 Evernia prunastri        -4.075392        56.56116    nSensitive
+    ## 5 Evernia prunastri        -4.011536        57.07350    nSensitive
+    ## 6 Evernia prunastri        -2.930506        54.57748    nSensitive
 
 ![](lichenMapping_files/figure-gfm/combinedData-1.png)<!-- -->
 
