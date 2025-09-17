@@ -36,7 +36,7 @@ showtext_auto()
 ## Lichen Occurrences
 ### Lichen species names
 
-```{r a, echo=TRUE}
+```{r a, echo=FALSE, results='asis'}
 # String of species names to loop through
 # "Pseudevernia furfuracea" - need to add to nSensitive
 nSensitive = c("Evernia prunastri","Usnea sp.",
@@ -47,11 +47,15 @@ nTolerant = c("Xanthoria parietina","Xanthoria polycarpa","Xanthoria ucrainica",
               "Physcia adscendens","Physcia tenella",
               "Arthonia radiata","Lecidella elaeochroma","Amandinea punctata",
               "Candelariella reflexa")
+indicatorSpp = cbind(nSensitive,nTolerant)
+names(indicatorSpp) = c("N Sensitive", "N Tolerant")
+indicatorSpp[length(nSensitive)+1,1] = "-"
+knitr::kable(indicatorSpp, caption = "Nitrogen Indicator Species")
 ```
 
-### Base map
+<!-- ### Base map -->
 
-```{r}
+```{r,echo=FALSE}
 # Download the base map of UK and surrounding countries
 uk_map <- ne_countries(
   scale = "medium",
@@ -64,9 +68,9 @@ uk_map <- ne_countries(
 ```
 
 
-This code displays the raw NBN Atlas data on maps.
+<!-- This code displays the raw NBN Atlas data on maps. -->
 
-```{r occurrenceMaps, echo=TRUE}
+```{r occurrenceMaps, echo=FALSE}
 ################################################################################
 #                 Maps of records from the NBN Atlas
 ################################################################################
@@ -107,9 +111,9 @@ for (z in 1:2) {
 
 ```
 
-## Combined data
+## Combined Species occurrences
 
-```{r combinedData, echo=TRUE}
+```{r combinedData, echo=FALSE}
 
 for (z in 1:2) {
   if (z == 1){
@@ -150,7 +154,6 @@ plot(df2$decimalLongitude,df2$decimalLatitude)
 
 ```
 
-## Combined Map
 
 ```{r combinedMap, echo=FALSE}
 
