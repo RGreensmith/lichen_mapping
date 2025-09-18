@@ -1,18 +1,18 @@
-## NBN mapping function
-# This function creates a map of occurrence records and has the option to plot a density map as well.
-
-occurrenceMap = function(basemap,sppDF,sppName,colGroup = "a",kdePlot = FALSE) {
-  # Projection/CRS of base map, NBN Atlas coordinates:
-  #     - WGS 84
-  plot(st_geometry(basemap),border="#f9fdf9",axes=TRUE,
-       xlim=c(-15,5),ylim=c(48.5,61.5),
-       col="#d8dedd",cex.axis=0.8)
+occurrenceMap = function(basemap,sppDF,sppName,colGroup = "a",pointsPlot=TRUE,kdePlot = FALSE) {
   
   if(colGroup=="a") {
     pointsCol = "#78C6C0"
   } else {
     pointsCol = "#c6787e"
   }
+  
+# Map occurrence as points ------------------------------------------------
+
+  plot(st_geometry(basemap),border="#f9fdf9",axes=TRUE,
+       xlim=c(-15,5),ylim=c(48.5,61.5),
+       col="#d8dedd",cex.axis=0.8)
+  
+  
   points(as.numeric(sppDF$decimalLongitude),
          as.numeric(sppDF$decimalLatitude),
          pch = 19,
@@ -21,8 +21,9 @@ occurrenceMap = function(basemap,sppDF,sppName,colGroup = "a",kdePlot = FALSE) {
   
   title(main = sppName,cex.main = 0.9,line = -1)
   
+
+# Map interpolated density of observations --------------------------------
   
-  ################ kernel density map #################################
   if (isTRUE(kdePlot)) {
     # Create colour ramp for kernel density estimation of observations
     # using my website colours
@@ -35,8 +36,10 @@ occurrenceMap = function(basemap,sppDF,sppName,colGroup = "a",kdePlot = FALSE) {
     
     s = SpatialPoints(na.omit(sdf))
     kde.output <- kernelUD(s,h="href", grid = 1000)
+    
     # converts to raster
     kde <- raster(kde.output)
+    
     # sets projection to British National Grid
     projection(kde) <- CRS("+init=EPSG:27700")
     
