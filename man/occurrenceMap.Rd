@@ -2,22 +2,37 @@
 \alias{occurrenceMap}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-A Capitalized Title (ideally limited to 65 characters)
+Map Species Observations
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+This function creates a map of occurrence records and has the option to plot a density map as well.
 }
 \usage{
-occurrenceMap(x)
+occurrenceMap(basemap, sppDF, sppName, colGroup = "a", pointsPlot = TRUE, kdePlot = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{x}{
-%%     ~~Describe \code{x} here~~
+  \item{basemap}{
+sf object. Basemap i.e. map of countries.
 }
+  \item{sppDF}{
+  Dataframe. Dataframe must include two columns named "decimalLongitude" and "decimalLatitude".
+  }
+  \item{sppName}{
+  Character. Name of the species to be used in the maps title.
+  }
+  \item{colGroup}{
+  Character. Species colour group for colour of points map and density map; "a" is teal, "b" is red.
+  }
+  \item{pointsPlot}{
+  Boolean. Option to make a points map. Defaults to TRUE.
+  }
+  \item{kdePlot}{
+  Boolean. Option to make a density map. Defaults to FALSE.
+  }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+Projection/CRS of base map, NBN Atlas coordinates: WGS 84.
 }
 \value{
 %%  ~Describe the value returned
