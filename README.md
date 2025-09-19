@@ -1,3 +1,8 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
 Lichen Mapping
 ================
 Rosemary Victoria Greensmith
@@ -28,7 +33,7 @@ This table displays the species of lichen used in this project.
 | \-                     | Candelariella reflexa |
 
 ### Indicator species occurrences
-These maps show records 
+These maps show records of each lichen species in the table above.
 
 #### Nitrogen sensitive species
 
