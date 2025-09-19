@@ -9,6 +9,7 @@ output: github_document
 knitr::opts_chunk$set(
   echo = FALSE,
   warning = FALSE,
+  message = FALSE,
   fig.align = "center",
   fig.width = 8,
   fig.height = 5)
@@ -27,7 +28,6 @@ library(raster)
 
 source("getNBNData.R")
 source("occurrenceMap.R")
-source("combinedMap.R")
 
 library(showtext)
 # library(ggtext)
@@ -61,7 +61,7 @@ knitr::kable(indicatorSpp, caption = "Nitrogen Indicator Species")
 <!-- ### Base map -->
 
 ```{r,echo=FALSE}
-# Download the base map of UK and surrounding countries
+# Download the base map of UK and surrounding countries --------------------
 uk_map <- ne_countries(
   scale = "medium",
   returnclass = "sf"
@@ -76,17 +76,17 @@ uk_map <- ne_countries(
 <!-- This code displays the raw NBN Atlas data on maps. -->
 
 ```{r occurrenceMaps, echo=FALSE}
-################################################################################
+# --------------------------------------------------------------------------
 #                 Maps of records from the NBN Atlas
-################################################################################
-
+# --------------------------------------------------------------------------
 
 # Set graphical parameters for the maps
 op = par(mfrow=c(2,4), font.lab = 2,
          mar=c(2,2.5,1,0.1)+0.1,
          oma=c(0.01,0.01,2,0.01),xpd=FALSE)
 
-###### Get NBN Atlas data and map the records ######
+# Get NBN Atlas data and map the records ----------------------------------
+
 for (z in 1:2) {
   if (z == 1){
     indicatorSpp = nSensitive
@@ -94,8 +94,14 @@ for (z in 1:2) {
     indicatorSpp = nTolerant
   }
   for (a in 1:length(indicatorSpp)) {
+    
+    # Get NBN Atlas data --------------------------------------------------
+    
     df = getNBNData(indicatorSpp[a],100)
     
+    # Map the records -----------------------------------------------------
+    
+    # set colour group for maps and main panel plot title
     if(z==1) {
       colGroup = "a"
       mainTitle = "Nitrogen-sensitive Lichen"
@@ -104,19 +110,21 @@ for (z in 1:2) {
       mainTitle = "Nitrogen-tolerant Lichen"
     }
   
-    occurrenceMap(uk_map,df,indicatorSpp[a],colGroup,kdePlot = TRUE)
+    # Produce maps
+    occurrenceMap(uk_map,df,colGroup,kdePlot = FALSE,plotTitle = indicatorSpp[a])
     
-     mtext(mainTitle,
+    # Plot main panel plot title
+    mtext(mainTitle,
           side = 3, line = -0.14, outer = TRUE,col = c("#131713"),
           font = 2,cex = 1.05)
+    
     rm(df)
   }
-  
 }
 
 ```
 
-## Combined Species occurrences
+## Combined species occurrences
 
 ```{r combinedData, echo=FALSE}
 
@@ -154,33 +162,66 @@ for (z in 1:2) {
 }
 colnames(df2) = c("scientificName", "decimalLongitude", "decimalLatitude", "indicatorType")
 
-head(df2)
-plot(df2$decimalLongitude,df2$decimalLatitude)
-
 ```
 
 
 ```{r combinedMap, echo=FALSE}
 
-
-
 # Plot the maps
 
-# op = par(mfrow=c(1,2), font.lab = 2,
-#          mar=c(2,2.5,1,0.1)+0.1,
-#          oma=c(0.01,0.01,2,0.01),xpd=FALSE)
+op = par(mfrow=c(1,2), font.lab = 2,
+         mar=c(2,2.5,1,0.1)+0.1,
+         oma=c(0.01,0.01,2,0.01),xpd=FALSE)
 
-combinedMap(uk_map,
-            sppDF = subset(df2,
+occurrenceMap(uk_map,
+             sppDF = subset(df2,
                            indicatorType == "nSensitive",
-                           select = c("decimalLongitude","decimalLatitude"))
-)
-combinedMap(uk_map,
-            sppDF = subset(df2,
+                           select = c("decimalLongitude","decimalLatitude")),
+             colGroup = "a", pointsPlot = FALSE, kdePlot = TRUE,
+             plotTitle = "Nitrogen Sensitive Spp."
+             )
+occurrenceMap(uk_map,
+             sppDF = subset(df2,
                            indicatorType == "nTolerant",
                            select = c("decimalLongitude","decimalLatitude")),
-            indicatorSensitive = FALSE
-)
+             colGroup = "b", pointsPlot = FALSE, kdePlot = TRUE,
+             plotTitle = "Nitrogen Tolerant Spp."
+             )
 
 ```
 
+## Difference between indicator species occurrences
+
+```{r mapDifference, echo = FALSE}
+# Preparing data ----------------------------------------------------------
+sdf = data.frame(df2$indicatorType,as.numeric(df2$decimalLongitude),
+                 as.numeric(df2$decimalLatitude))
+s = SpatialPointsDataFrame(data = na.omit(sdf),coords = sdf[,2:3])
+
+# Calculating kernel density ----------------------------------------------
+(ud <- kernelUD(s[,1], same4all = TRUE, grid = 1000))
+
+# Calculating difference --------------------------------------------------
+udSensitive = raster(ud$nSensitive)
+udTolerant = raster(ud$nTolerant)
+compareRaster(udSensitive,udTolerant)
+rastDiff = udSensitive - udTolerant
+
+# Plot masked difference --------------------------------------------------
+projection(rastDiff) <- CRS("+init=EPSG:27700") # sets projection to British National Grid
+maskedDiff = mask(rastDiff, uk_map)
+
+fun_colour_range <- colorRampPalette(c("#c6787e","#d8dedd","#78C6C0"))   
+my_colours <- fun_colour_range(1000)
+
+op = par(font.lab = 2,
+         mar=c(2,5,1,5)+0.1
+         ,xpd=FALSE)
+
+plot(st_geometry(uk_map),border="#f9fdf9",axes=TRUE,
+     xlim=c(-15,5),ylim=c(48.5,61.5),
+     col="#d8dedd",cex.axis=0.8)
+plot(maskedDiff,col=my_colours, add = TRUE,)
+plot(st_geometry(uk_map),border="#f9fdf9",add = TRUE)
+
+```

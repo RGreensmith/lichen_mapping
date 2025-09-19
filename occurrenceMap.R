@@ -48,9 +48,13 @@ occurrenceMap = function(basemap,sppDF,colGroup = "a",
     
     masked_kde <- mask(kde, uk_map)
     
-    plot(masked_kde,col=my_colours,axes=TRUE,
-         xlim=c(-15,5),ylim=c(48.5,61.5))
-    plot(st_geometry(uk_map),add = TRUE,border="#f9fdf9")
+    plot(st_geometry(basemap),border="#f9fdf9",axes=TRUE,
+         xlim=c(-15,5),ylim=c(48.5,61.5),
+         col="#d8dedd",cex.axis=0.8)
+    plot(masked_kde,col=my_colours, add = TRUE,)
+    plot(st_geometry(uk_map),border="#f9fdf9",add = TRUE)
+    
+
     
     title(main = plotTitle,cex.main = 0.9,line = -1)
   }
