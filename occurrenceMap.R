@@ -1,4 +1,6 @@
-occurrenceMap = function(basemap,sppDF,sppName,colGroup = "a",pointsPlot=TRUE,kdePlot = FALSE) {
+occurrenceMap = function(basemap,sppDF,colGroup = "a",
+                         pointsPlot=TRUE,kdePlot = FALSE,
+                         plotTitle) {
   
   if(colGroup=="a") {
     pointsCol = "#78C6C0"
@@ -8,19 +10,20 @@ occurrenceMap = function(basemap,sppDF,sppName,colGroup = "a",pointsPlot=TRUE,kd
   
 # Map occurrence as points ------------------------------------------------
 
-  plot(st_geometry(basemap),border="#f9fdf9",axes=TRUE,
-       xlim=c(-15,5),ylim=c(48.5,61.5),
-       col="#d8dedd",cex.axis=0.8)
-  
-  
-  points(as.numeric(sppDF$decimalLongitude),
-         as.numeric(sppDF$decimalLatitude),
-         pch = 19,
-         cex = 0.6,
-         col=pointsCol)
-  
-  title(main = sppName,cex.main = 0.9,line = -1)
-  
+  if (isTRUE(pointsPlot)) {
+    plot(st_geometry(basemap),border="#f9fdf9",axes=TRUE,
+         xlim=c(-15,5),ylim=c(48.5,61.5),
+         col="#d8dedd",cex.axis=0.8)
+    
+    
+    points(as.numeric(sppDF$decimalLongitude),
+           as.numeric(sppDF$decimalLatitude),
+           pch = 19,
+           cex = 0.6,
+           col=pointsCol)
+    
+    title(main = plotTitle,cex.main = 0.9,line = -1)
+  }
 
 # Map interpolated density of observations --------------------------------
   
@@ -31,8 +34,8 @@ occurrenceMap = function(basemap,sppDF,sppName,colGroup = "a",pointsPlot=TRUE,kd
     my_colours <- fun_colour_range(1000)  
     
     # Setting up the layers to map
-    sdf = data.frame(as.numeric(df$decimalLongitude),
-                     as.numeric(df$decimalLatitude))
+    sdf = data.frame(as.numeric(sppDF$decimalLongitude),
+                     as.numeric(sppDF$decimalLatitude))
     
     s = SpatialPoints(na.omit(sdf))
     kde.output <- kernelUD(s,h="href", grid = 1000)
@@ -48,6 +51,7 @@ occurrenceMap = function(basemap,sppDF,sppName,colGroup = "a",pointsPlot=TRUE,kd
     plot(masked_kde,col=my_colours,axes=TRUE,
          xlim=c(-15,5),ylim=c(48.5,61.5))
     plot(st_geometry(uk_map),add = TRUE,border="#f9fdf9")
-    title(main = indicatorSpp[a],cex.main = 0.9,line = -1)
+    
+    title(main = plotTitle,cex.main = 0.9,line = -1)
   }
 }
