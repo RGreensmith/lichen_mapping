@@ -8,7 +8,8 @@ Map Species Observations
 This function creates a map of occurrence records and has the option to plot a density map as well.
 }
 \usage{
-occurrenceMap(basemap, sppDF, sppName, colGroup = "a", pointsPlot = TRUE, kdePlot = FALSE)
+occurrenceMap(basemap, sppDF, colGroup = "a",
+              pointsPlot=TRUE, kdePlot = FALSE, plotTitle)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -18,9 +19,6 @@ sf object. Basemap i.e. map of countries.
   \item{sppDF}{
   Dataframe. Dataframe must include two columns named "decimalLongitude" and "decimalLatitude".
   }
-  \item{sppName}{
-  Character. Name of the species to be used in the maps title.
-  }
   \item{colGroup}{
   Character. Species colour group for colour of points map and density map; "a" is teal, "b" is red.
   }
@@ -29,6 +27,9 @@ sf object. Basemap i.e. map of countries.
   }
   \item{kdePlot}{
   Boolean. Option to make a density map. Defaults to FALSE.
+  }
+  \item{plotTitle}{
+  String. Name of the title for both types of plot.
   }
 }
 \details{
