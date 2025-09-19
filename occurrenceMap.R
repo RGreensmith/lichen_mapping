@@ -3,7 +3,7 @@ occurrenceMap = function(basemap,sppDF,colGroup = "a",
                          plotTitle) {
   
   if(colGroup=="a") {
-    pointsCol = "#78C6C0"
+    pointsCol = "#79c6c0"
   } else {
     pointsCol = "#c6787e"
   }
@@ -13,7 +13,7 @@ occurrenceMap = function(basemap,sppDF,colGroup = "a",
   if (isTRUE(pointsPlot)) {
     plot(st_geometry(basemap),border="#f9fdf9",axes=TRUE,
          xlim=c(-15,5),ylim=c(48.5,61.5),
-         col="#d8dedd",cex.axis=0.8)
+         col="#d8dedd",cex.axis=0.8, family = "lil")
     
     
     points(as.numeric(sppDF$decimalLongitude),
@@ -22,7 +22,7 @@ occurrenceMap = function(basemap,sppDF,colGroup = "a",
            cex = 0.6,
            col=pointsCol)
     
-    title(main = plotTitle,cex.main = 0.9,line = -1)
+    title(main = plotTitle,cex.main = 1,line = -1,family = "lil")
   }
 
 # Map interpolated density of observations --------------------------------
@@ -50,12 +50,12 @@ occurrenceMap = function(basemap,sppDF,colGroup = "a",
     
     plot(st_geometry(basemap),border="#f9fdf9",axes=TRUE,
          xlim=c(-15,5),ylim=c(48.5,61.5),
-         col="#d8dedd",cex.axis=0.8)
+         col="#d8dedd",cex.axis=0.8, family = "lil")
     plot(masked_kde,col=my_colours, add = TRUE,)
     plot(st_geometry(uk_map),border="#f9fdf9",add = TRUE)
     
 
     
-    title(main = plotTitle,cex.main = 0.9,line = -1)
+    title(main = plotTitle,cex.main = 0.9,line = -1,family = "lil")
   }
 }

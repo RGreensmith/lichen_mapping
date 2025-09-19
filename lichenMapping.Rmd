@@ -3,6 +3,11 @@ title: "Lichen Mapping"
 author: "Rosemary Victoria Greensmith"
 date: "`r Sys.Date()`"
 output: github_document
+fontsize: 10pt
+mainfont: Montserrat
+sansfont: Lilita One
+monofont: Courier New
+geometry: a4paper, top=30mm, bottom=20mm, left=20mm, right=20mm
 ---
 
 ```{r setup, include=FALSE}
@@ -32,8 +37,9 @@ source("occurrenceMap.R")
 library(showtext)
 # library(ggtext)
 # Fonts for plots
-font_add_google("Montserrat", "mont")
-font_add_google("Chivo", "chivo")
+# font_add_google("Montserrat", "mont")
+# font_add_google("Chivo", "chivo")
+font_add_google("Lilita One", "lil")
 showtext_auto()
 ```
 
@@ -83,7 +89,7 @@ uk_map <- ne_countries(
 # Set graphical parameters for the maps
 op = par(mfrow=c(2,4), font.lab = 2,
          mar=c(2,2.5,1,0.1)+0.1,
-         oma=c(0.01,0.01,2,0.01),xpd=FALSE)
+         oma=c(0.01,0.01,2,0.01),xpd=FALSE,family = "lil")
 
 # Get NBN Atlas data and map the records ----------------------------------
 
@@ -114,9 +120,11 @@ for (z in 1:2) {
     occurrenceMap(uk_map,df,colGroup,kdePlot = FALSE,plotTitle = indicatorSpp[a])
     
     # Plot main panel plot title
-    mtext(mainTitle,
+    if (a == 1) {
+      mtext(mainTitle,
           side = 3, line = -0.14, outer = TRUE,col = c("#131713"),
-          font = 2,cex = 1.05)
+          font = 2,cex = 1.05, family = "lil")
+    }
     
     rm(df)
   }
@@ -170,8 +178,8 @@ colnames(df2) = c("scientificName", "decimalLongitude", "decimalLatitude", "indi
 # Plot the maps
 
 op = par(mfrow=c(1,2), font.lab = 2,
-         mar=c(2,2.5,1,0.1)+0.1,
-         oma=c(0.01,0.01,2,0.01),xpd=FALSE)
+         mar=c(2,2,5,5.5)+0.1,
+         oma=c(0.01,0.01,2,0.01),xpd=FALSE, family = "lil")
 
 occurrenceMap(uk_map,
              sppDF = subset(df2,
@@ -192,7 +200,7 @@ occurrenceMap(uk_map,
 
 ## Difference between indicator species occurrences
 
-```{r mapDifference, echo = FALSE}
+```{r mapDifference, echo = FALSE,message=FALSE}
 # Preparing data ----------------------------------------------------------
 sdf = data.frame(df2$indicatorType,as.numeric(df2$decimalLongitude),
                  as.numeric(df2$decimalLatitude))
@@ -207,21 +215,22 @@ udTolerant = raster(ud$nTolerant)
 compareRaster(udSensitive,udTolerant)
 rastDiff = udSensitive - udTolerant
 
-# Plot masked difference --------------------------------------------------
+# Get masked difference --------------------------------------------------
 projection(rastDiff) <- CRS("+init=EPSG:27700") # sets projection to British National Grid
 maskedDiff = mask(rastDiff, uk_map)
 
-fun_colour_range <- colorRampPalette(c("#c6787e","#d8dedd","#78C6C0"))   
-my_colours <- fun_colour_range(1000)
+# Plot difference --------------------------------------------------
 
-op = par(font.lab = 2,
-         mar=c(2,5,1,5)+0.1
-         ,xpd=FALSE)
+op = par(font.lab = 2,mar=c(2,9,1,9)+0.1,xpd=FALSE, family = "lil")
+
+fun_colour_range <- colorRampPalette(c("#c6787e","#d8dedd","#79c6c0"))   
+my_colours <- fun_colour_range(1000)
 
 plot(st_geometry(uk_map),border="#f9fdf9",axes=TRUE,
      xlim=c(-15,5),ylim=c(48.5,61.5),
      col="#d8dedd",cex.axis=0.8)
-plot(maskedDiff,col=my_colours, add = TRUE,)
+plot(maskedDiff,col=my_colours, add = TRUE)
 plot(st_geometry(uk_map),border="#f9fdf9",add = TRUE)
+title(main = "Difference in lichen indicator spp. occurrence",family = "lil",cex.main = 1.1,line = -1)
 
 ```
