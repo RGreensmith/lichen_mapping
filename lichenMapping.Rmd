@@ -26,6 +26,7 @@ library(rnaturalearth)
 library(httr)      # for getting data using API's
 library(jsonlite)  # for getting NBN Atlas data
 
+
 # kernel density map
 library(sp) # for setting up the layers to map
 library(adehabitatHR)
@@ -68,13 +69,12 @@ knitr::kable(indicatorSpp, caption = "Nitrogen Indicator Species")
 
 ```{r,echo=FALSE}
 # Download the base map of UK and surrounding countries --------------------
+# CRS is WGS 84
 uk_map <- ne_countries(
   scale = "medium",
   returnclass = "sf"
 ) %>%
-  filter(admin %in% c("United Kingdom", "Ireland",
-                      "Jersey","France","Netherlands","Germany",
-                      "Denmark","Belgium","Norway","Finland","Sweden"))
+  filter(admin %in% c("United Kingdom","Ireland"))
 
 ```
 
@@ -103,7 +103,7 @@ for (z in 1:2) {
     
     # Get NBN Atlas data --------------------------------------------------
     
-    df = getNBNData(indicatorSpp[a],100)
+    df = getNBNData(indicatorSpp[a],1000)
     
     # Map the records -----------------------------------------------------
     
@@ -124,6 +124,7 @@ for (z in 1:2) {
       mtext(mainTitle,
           side = 3, line = -0.14, outer = TRUE,col = c("#131713"),
           font = 2,cex = 1.05, family = "lil")
+      mtext(Sys.Date(),side = 3, line = -0.9, outer = TRUE, cex = 0.5)
     }
     
     rm(df)
@@ -233,4 +234,8 @@ plot(maskedDiff,col=my_colours, add = TRUE)
 plot(st_geometry(uk_map),border="#f9fdf9",add = TRUE)
 title(main = "Difference in lichen indicator spp. occurrence",family = "lil",cex.main = 1.1,line = -1)
 
+```
+
+```{r citations, echo = FALSE}
+knitr::kable(unique(df$dataProviderName), caption = "NBN Atlas citations")
 ```
