@@ -49,3 +49,34 @@ This map shows the difference between the interpolated density of nitrogen sensi
 
 <img src="lichenMapping_files/figure-gfm/mapDifference-1.png" style="display: block; margin: auto;" />
 
+### NBN Atlas Citations
+
+| NBN Atlas Data Providers                                   |
+|:-----------------------------------------------------------|
+| Kent & Medway Biological Records Centre                    |
+| British Lichen Society                                     |
+| Cambridgeshire & Peterborough Environmental Records Centre |
+| Centre for Environmental Data and Recording                |
+| Leicestershire and Rutland Environmental Records Centre    |
+| National Trust                                             |
+| The Wildlife Information Centre                            |
+| Royal Botanic Garden Edinburgh                             |
+| NatureSpot                                                 |
+| Norfolk Biodiversity Information Service                   |
+| Suffolk Biodiversity Information Service                   |
+| Plantlife International                                    |
+| Dorset Environmental Records Centre                        |
+| Fife Nature Records Centre                                 |
+| BIS for Powys & Brecon Beacons National Park               |
+| Natural History Museum, London                             |
+| North East Scotland Biological Records Centre              |
+| Royal Horticultural Society                                |
+| Natural Resources Wales                                    |
+| West Wales Biodiversity Information Centre                 |
+| Bristol Regional Environmental Records Centre              |
+| Cofnod - North Wales Environmental Information Service     |
+| Rotherham Biological Records Centre                        |
+| Highland Biological Recording Group                        |
+| Lancashire Environment Record Network                      |
+| Gloucestershire Centre for Environmental Records           |
+

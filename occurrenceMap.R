@@ -57,5 +57,6 @@ occurrenceMap = function(basemap,sppDF,colGroup = "a",
 
     
     title(main = plotTitle,cex.main = 0.9,line = -1,family = "lil")
+    title(sub = Sys.Date())
   }
 }
