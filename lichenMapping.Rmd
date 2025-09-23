@@ -205,10 +205,17 @@ occurrenceMap(uk_map,
 # Preparing data ----------------------------------------------------------
 sdf = data.frame(df2$indicatorType,as.numeric(df2$decimalLongitude),
                  as.numeric(df2$decimalLatitude))
-s = SpatialPointsDataFrame(data = na.omit(sdf),coords = sdf[,2:3])
+s = SpatialPointsDataFrame(data = na.omit(sdf),coords = sdf[,2:3],proj4string = CRS("EPSG:4326"))
+
+# # Trying to set up boundary
+# uk_mapL = uk_map
+# coast = ne_coastline()
+# coast <-coast[[1,"geometry"]]
+# as(st_geometry(coast), "Spatial")
+# (ud <- kernelUD(s[,1], same4all = TRUE, grid = 100, boundary = st_geometry(coast)))
 
 # Calculating kernel density ----------------------------------------------
-(ud <- kernelUD(s[,1], same4all = TRUE, grid = 1000))
+(ud <- kernelUD(s[,1], same4all = TRUE, grid = 100))
 
 # Calculating difference --------------------------------------------------
 udSensitive = raster(ud$nSensitive)
@@ -217,7 +224,7 @@ compareRaster(udSensitive,udTolerant)
 rastDiff = udSensitive - udTolerant
 
 # Get masked difference --------------------------------------------------
-projection(rastDiff) <- CRS("+init=EPSG:27700") # sets projection to British National Grid
+# projection(rastDiff) <- CRS("+init=EPSG:27700") # sets projection to British National Grid
 maskedDiff = mask(rastDiff, uk_map)
 
 # Plot difference --------------------------------------------------
