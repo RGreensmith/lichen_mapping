@@ -8,7 +8,7 @@ getNBNData = function(latinName,numRecords){
   #     - No unconfirmed, unconfirmed (not reviewed) or unconfirmed (plausible)
   #     - No absences
   
-  # NBN data CRS is EPSG:4326
+  # NBN data CRS is WGS 84, EPSG:4326
   
   if (species != "sp.") {
     api=paste("https://records-ws.nbnatlas.org/occurrences/search?",
@@ -39,6 +39,6 @@ getNBNData = function(latinName,numRecords){
   taxonInfoContent = httr::content(taxonInfo, as = 'text')
   taxonInfoContentJSON = jsonlite::fromJSON(taxonInfoContent)
   df=taxonInfoContentJSON$occurrences
-  print("NBN Atlas Data Coordinate Reference System = EPSG:4326")
+  print("NBN Atlas Data Coordinate Reference System = WGS 84, EPSG:4326")
   return(df)
 }
