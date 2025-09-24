@@ -215,7 +215,7 @@ s = SpatialPointsDataFrame(data = na.omit(sdf),coords = sdf[,2:3],proj4string = 
 # (ud <- kernelUD(s[,1], same4all = TRUE, grid = 100, boundary = st_geometry(coast)))
 
 # Calculating kernel density ----------------------------------------------
-(ud <- kernelUD(s[,1], same4all = TRUE, grid = 100))
+(ud <- kernelUD(s[,1], same4all = TRUE, grid = 1000))
 
 # Calculating difference --------------------------------------------------
 udSensitive = raster(ud$nSensitive)
